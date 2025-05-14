@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <title>Termékösszesítő</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; }
+    textarea { width: 100%; height: 200px; margin-bottom: 1em; }
+    button { padding: 0.5em 1em; font-size: 1em; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
+    th { background: #eee; }
+  </style>
+</head>
+<body>
+
+  <h1>Termékösszesítő</h1>
+  <p>Illessz be az adatokat az alábbi mezőbe, majd kattints az Összesítés gombra.</p>
+  
+  <p>
+  A program automatikusan felismeri a termék nevét és kiszámolja, mennyit kell még feltölteni.  
+  A termék neve az első olyan oszlop, amely nem számot tartalmaz.  
+  A feltöltendő mennyiség az utolsó oszlop alapján kerül kiszámításra, amelynek <strong>x/y</strong> formátumúnak kell lennie 
+  (például: <em>2824.0/4000</em>). Ilyenkor a rendszer a teljes kapacitásból (y) levonja az aktuális mennyiséget (x), így megkapja, mennyi hiányzik.
+	</p>
+  
+  <textarea id="inputData" placeholder="Ide másold az adatokat..."></textarea>
+  <br>
+  <button onclick="processData()">Összesítés</button>
+
+  <div id="result"></div>
+
+  <script>
+    function processData() {
+		const rawLines = document.getElementById('inputData').value
+		  .split('\n')
+		  .map(l => l.trim())
+		  .filter(Boolean);
+
+		const lines = [];
+
+		// Fűzzük össze a 'x/y' típusú sorokat az előző sorhoz
+		for (let i = 0; i < rawLines.length; i++) {
+		  if (/^-?\d+(\.\d+)?\/-?\d+(\.\d+)?$/.test(rawLines[i])) {
+			if (lines.length > 0) {
+			  lines[lines.length - 1] += '\t' + rawLines[i];
+			}
+		  } else {
+			lines.push(rawLines[i]);
+		  }
+		}
+
+		const products = {};
+
+		lines.forEach(line => {
+		  const parts = line.split(/\t+/); // több tab vagy szóköz is lehet
+
+		  // Termék neve: az első nem szám típusú oszlop
+		  const name = parts.find(p => isNaN(parseFloat(p)));
+
+		  // Legutolsó mező: x/y típusú érték
+		  const last = parts[parts.length - 1];
+		  const match = last.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+		  if (!match || !name) return;
+
+		  const current = Math.max(0, parseFloat(match[1]));
+		  const max = parseFloat(match[2]);
+		  const needToFill = Math.max(0, max - current); // Ne legyen negatív
+
+		  if (needToFill > 0) {
+			if (!products[name]) {
+			  products[name] = 0;
+			}
+			products[name] += needToFill;
+		  }
+		});
+
+      const resultDiv = document.getElementById('result');
+      if (Object.keys(products).length === 0) {
+        resultDiv.innerHTML = "<p><strong>Nincs betöltendő termék.</strong></p>";
+        return;
+      }
+
+      let html = "<table><tr><th>Termék</th><th>Betöltendő mennyiség</th></tr>";
+      for (const [name, qty] of Object.entries(products)) {
+        html += `<tr><td>${name}</td><td>${qty}</td></tr>`;
+      }
+      html += "</table>";
+
+      resultDiv.innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
