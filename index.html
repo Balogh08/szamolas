@@ -3,77 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <title>Termékösszesítő</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
-    body { font-family: sans-serif; padding: 1em; }
-    textarea { width: 100%; height: 200px; margin-bottom: 1em; }
-    button { padding: 0.5em 1em; font-size: 1em; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1em; }
-    th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
-    th { background: #eee; }
+    :root {
+      --primary: #d60000;
+      --primary-dark: #a50000;
+      --text: #333;
+      --bg: #f9f9f9;
+      --table-header: #eee;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2em 1em;
+      max-width: 800px;
+      margin: auto;
+      font-size: 1.1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      font-size: 2rem;
+      margin-bottom: 1em;
+    }
+
+    img.logo {
+      display: block;
+      margin: 0 auto 1.5em auto;
+      max-width: 100%;
+      height: auto;
+      width: 180px;
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 0.8em;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 1em;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      resize: vertical;
+      box-sizing: border-box;
+      background: #fff;
+      margin-bottom: 1em;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+      align-items: center;
+      margin-bottom: 2em;
+    }
+
+    button {
+      padding: 1em 2em;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2em;
+      font-size: 1rem;
+      overflow-x: auto;
+      display: block;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 1em;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: var(--table-header);
+      font-weight: bold;
+    }
+
+    #result p {
+      font-weight: bold;
+      color: green;
+      text-align: center;
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        font-size: 1.05rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      button {
+        font-size: 1.1rem;
+        padding: 1em;
+      }
+
+      textarea {
+        height: 180px;
+        font-size: 1rem;
+      }
+
+      table {
+        font-size: 0.95rem;
+      }
+    }
   </style>
 </head>
 <body>
 
+  <img src="hell.png" alt="HELL logó" class="logo">
+
   <h1>Termékösszesítő</h1>
-  <p>Illessz be az adatokat az alábbi mezőbe, majd kattints az Összesítés gombra.</p>
-  
-  <p>
-  A program automatikusan felismeri a termék nevét és kiszámolja, mennyit kell még feltölteni.  
-  A termék neve az első olyan oszlop, amely nem számot tartalmaz.  
-  A feltöltendő mennyiség az utolsó oszlop alapján kerül kiszámításra, amelynek <strong>x/y</strong> formátumúnak kell lennie 
-  (például: <em>2824.0/4000</em>). Ilyenkor a rendszer a teljes kapacitásból (y) levonja az aktuális mennyiséget (x), így megkapja, mennyi hiányzik.
-	</p>
-  
-  <textarea id="inputData" placeholder="Ide másold az adatokat..."></textarea>
-  <br>
-  <button onclick="processData()">Összesítés</button>
+  <p>Illessz be az adatokat az alábbi mezőbe, majd kattints az <strong>Összesítés</strong> gombra.</p>
+  <p>A program felismeri a termék nevét és kiszámolja, mennyi hiányzik.</p>
+
+  <textarea id="inputData" placeholder="Ide másold az adatokat..." wrap="off"></textarea>
+
+  <div class="button-container">
+    <button onclick="processData()">Összesítés</button>
+    <button onclick="clearData()">Törlés</button>
+  </div>
 
   <div id="result"></div>
 
   <script>
     function processData() {
-		const rawLines = document.getElementById('inputData').value
-		  .split('\n')
-		  .map(l => l.trim())
-		  .filter(Boolean);
+      const rawLines = document.getElementById('inputData').value
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean);
 
-		const lines = [];
+      const lines = [];
 
-		// Fűzzük össze a 'x/y' típusú sorokat az előző sorhoz
-		for (let i = 0; i < rawLines.length; i++) {
-		  if (/^-?\d+(\.\d+)?\/-?\d+(\.\d+)?$/.test(rawLines[i])) {
-			if (lines.length > 0) {
-			  lines[lines.length - 1] += '\t' + rawLines[i];
-			}
-		  } else {
-			lines.push(rawLines[i]);
-		  }
-		}
+      for (let i = 0; i < rawLines.length; i++) {
+        if (/^-?\d+(\.\d+)?\/-?\d+(\.\d+)?$/.test(rawLines[i])) {
+          if (lines.length > 0) {
+            lines[lines.length - 1] += '\t' + rawLines[i];
+          }
+        } else {
+          lines.push(rawLines[i]);
+        }
+      }
 
-		const products = {};
+      const products = {};
 
-		lines.forEach(line => {
-		  const parts = line.split(/\t+/); // több tab vagy szóköz is lehet
+      lines.forEach(line => {
+        const parts = line.split(/\t+/);
+        const name = parts.find(p => isNaN(parseFloat(p)));
+        const last = parts[parts.length - 1];
+        const match = last.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+        if (!match || !name) return;
 
-		  // Termék neve: az első nem szám típusú oszlop
-		  const name = parts.find(p => isNaN(parseFloat(p)));
+        const current = Math.max(0, parseFloat(match[1]));
+        const max = parseFloat(match[2]);
+        const needToFill = Math.max(0, max - current);
 
-		  // Legutolsó mező: x/y típusú érték
-		  const last = parts[parts.length - 1];
-		  const match = last.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
-		  if (!match || !name) return;
-
-		  const current = Math.max(0, parseFloat(match[1]));
-		  const max = parseFloat(match[2]);
-		  const needToFill = Math.max(0, max - current); // Ne legyen negatív
-
-		  if (needToFill > 0) {
-			if (!products[name]) {
-			  products[name] = 0;
-			}
-			products[name] += needToFill;
-		  }
-		});
+        if (needToFill > 0) {
+          if (!products[name]) {
+            products[name] = 0;
+          }
+          products[name] += needToFill;
+        }
+      });
 
       const resultDiv = document.getElementById('result');
       if (Object.keys(products).length === 0) {
@@ -88,6 +208,11 @@
       html += "</table>";
 
       resultDiv.innerHTML = html;
+    }
+
+    function clearData() {
+      document.getElementById('inputData').value = '';
+      document.getElementById('result').innerHTML = '';
     }
   </script>
 
